@@ -1,4 +1,6 @@
-# ror2-hud ![dotnet build](https://github.com/tlsJP/ror2-hud/actions/workflows/dotnet.yml/badge.svg)
+![dotnet build](https://github.com/tlsJP/ror2-hud/actions/workflows/dotnet.yml/badge.svg)
+
+# ror2-hud 
 
 
 
