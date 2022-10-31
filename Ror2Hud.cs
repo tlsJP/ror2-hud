@@ -23,30 +23,28 @@ namespace com.thejpaproject.ror2hud
     public const string PluginVersion = "1.0.2";
 
 
-    private RoR2.UI.HUD _hud = null;
-
     public void Awake()
     {
       _logger = BepInEx.Logging.Logger.CreateLogSource("Ror2Hud");
 
       On.RoR2.UI.HUD.Awake += MyHud;
 
+      _logger.LogInfo("loaded");
     }
 
 
     private void MyHud(On.RoR2.UI.HUD.orig_Awake orig, RoR2.UI.HUD self)
     {
       orig(self);
-      var mainContainer = self.mainContainer.transform;
 
       GameObject gameObject = new GameObject("MyHUD");
-      gameObject.transform.SetParent(mainContainer);
+      gameObject.transform.SetParent(self.mainContainer.transform);
 
       // (0,0) = bottom left
       // (1,1) = top right
       RectTransform rectTransform = gameObject.AddComponent<RectTransform>();
-      rectTransform.anchorMin = Vector2.zero;
-      rectTransform.anchorMax = Vector2.one;
+      rectTransform.anchorMin = new Vector2(0f, .25f);
+      rectTransform.anchorMax = new Vector2(.5f, .75f);
 
       // difference in size of object relative to the anchors
       rectTransform.sizeDelta = Vector2.zero;
@@ -54,22 +52,27 @@ namespace com.thejpaproject.ror2hud
       // Move the object to transalte by a certain amount relative to its anchor
       rectTransform.anchoredPosition = Vector2.zero;
 
-      var image = gameObject.AddComponent<Image>();
-      image.sprite = Resources.Load<Sprite>("textures/itemicons/texBearIcon");
 
+      Font arial = (Font)Resources.GetBuiltinResource(typeof(Font), "Arial.ttf");
+      var text = gameObject.AddComponent<Text>();
+      text.font = arial;
+      text.text = "HELLO WORLD";
+      text.fontSize = 48;
+      text.alignment = TextAnchor.MiddleCenter;
 
+      // RectTransform ttr;
+      // ttr = text.GetComponent<RectTransform>();
+      // ttr.localPosition = new Vector3(0, 0, 0);
+      // ttr.sizeDelta = new Vector2(600, 200);
 
     }
 
-    private void OnDestroy()
-    {
-      On.RoR2.UI.HUD.Awake -= DestroyMyHud;
-    }
+    // Adding this seems to prevent the awake event from firing 
+    // private void OnDestroy()
+    // {
+    //   On.RoR2.UI.HUD.Awake -= MyHud;
+    // }
 
-    private void DestroyMyHud(On.RoR2.UI.HUD.orig_Awake orig, RoR2.UI.HUD self)
-    {
-      // todo ?
-    }
 
   }
 }
