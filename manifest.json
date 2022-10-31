@@ -1,0 +1,12 @@
+﻿{
+  "name": "Ror_2_HUD",
+  "authorName": "JP",
+  "networkMode": "client",
+  "version_number": "1.0.2",
+  "website_url": "https://github.com/tlsJP/ror2-hud",
+  "description": "Risk Of Rain 2 HUD",
+  "dependencies": [
+    "bbepis-BepInExPack-5.4.9",
+    "RiskofThunder-HookGenPatcher-1.2.1"
+  ]
+}
