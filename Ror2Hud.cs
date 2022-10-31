@@ -4,7 +4,7 @@
 
 using BepInEx;
 using BepInEx.Logging;
-
+using System;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -22,14 +22,35 @@ namespace com.thejpaproject.ror2hud
     public const string PluginName = "ror2hud";
     public const string PluginVersion = "1.0.2";
 
+    private float timer = 0f;
+    private float delay = .5f;
 
     public void Awake()
     {
       _logger = BepInEx.Logging.Logger.CreateLogSource("Ror2Hud");
 
       On.RoR2.UI.HUD.Awake += MyHud;
+      On.RoR2.UI.HUD.Update += Update;
 
       _logger.LogInfo("loaded");
+    }
+
+    private void Update(On.RoR2.UI.HUD.orig_Update orig, RoR2.UI.HUD self)
+    {
+
+      timer += Time.deltaTime;
+
+      if (timer > delay)
+      {
+        orig(self);
+        var children = self.GetComponentsInChildren<Text>();
+        foreach (Text t in children)
+        {
+          _logger.LogInfo(DateTime.Now);
+          t.text = DateTime.Now.ToString();
+        }
+        timer = timer - delay;
+      }
     }
 
 
