@@ -9,7 +9,6 @@
       "command": "dotnet msbuild",
       "group": "build",
       "presentation": {
-        // Reveal the output only if unrecognized errors occur.
         "reveal": "silent"
       },
       "problemMatcher": "$msCompile"
@@ -22,9 +21,13 @@
         "bin/Debug/netstandard2.0/ror2hud.dll",
         "C:/Program Files (x86)/Steam/steamapps/common/Risk of Rain 2/BepInEx/plugins/ror2hud/"
       ],
-      "group": "build",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
       "dependsOn": "build",
-      "dependsOrder": "sequence"
+      "dependsOrder": "sequence",
+      "problemMatcher": []
     }
   ]
 }
