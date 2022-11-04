@@ -25,7 +25,9 @@ namespace com.thejpaproject.ror2hud
     private float timer = 0f;
     private float delay = 1f;
 
-    private long fakeEndTime = (long)(DateTime.Now.AddHours(1) - new DateTime(1970, 1, 1)).TotalSeconds;
+    private static DateTime epoch = new DateTime(1970, 1, 1);
+
+    private long fakeEndTime = (long)(DateTime.Now.AddHours(1).AddMinutes(2) - epoch).TotalSeconds;
 
     public void Awake()
     {
@@ -54,8 +56,6 @@ namespace com.thejpaproject.ror2hud
 
       _logger.LogInfo("body ?" + JsonUtility.ToJson(body, true));
 
-      _logger.LogInfo(fakeEndTime);
-      _logger.LogInfo(new DateTime().AddSeconds(fakeEndTime));
 
     }
 
@@ -70,6 +70,30 @@ namespace com.thejpaproject.ror2hud
       }
     }
 
+    bool IsRaceNow()
+    {
+      var startMs = RacesApi.TimeData.body.item.startTime;
+      var endMs = RacesApi.TimeData.body.item.endTime;
+      var now = (DateTime.Now - epoch).TotalMilliseconds;
+      return startMs < now && now < endMs;
+    }
+
+    bool IsRaceFuture()
+    {
+      var startMs = RacesApi.TimeData.body.item.startTime;
+      var endMs = RacesApi.TimeData.body.item.endTime;
+      var now = (DateTime.Now - epoch).TotalMilliseconds;
+      return now < startMs && now < endMs;
+    }
+
+    bool IsRacePast()
+    {
+      var startMs = RacesApi.TimeData.body.item.startTime;
+      var endMs = RacesApi.TimeData.body.item.endTime;
+      var now = (DateTime.Now - epoch).TotalMilliseconds;
+      return now > startMs && now > endMs;
+    }
+
 
     private void Update(On.RoR2.UI.HUD.orig_Update orig, RoR2.UI.HUD self)
     {
@@ -79,68 +103,106 @@ namespace com.thejpaproject.ror2hud
 
       if (timer > delay)
       {
-
-        // var endTime = RacesApi.TimeData.body.item.endTime;
-        var endDateTime = new DateTime(1970, 1, 1).AddSeconds(fakeEndTime);
-
-        _logger.LogInfo(DateTime.Now);
-        _logger.LogInfo(endDateTime);
-
+        var endDateTime = epoch.AddSeconds(fakeEndTime);
         var remaining = endDateTime.Subtract(DateTime.Now);
-
-        _logger.LogInfo("hours - " + remaining.Hours);
-        _logger.LogInfo("mins - " + remaining.Minutes);
-        _logger.LogInfo("secs - " + remaining.Seconds);
-        _logger.LogInfo("g - " + remaining.ToString("g"));
-
-
 
         var children = self.GetComponentsInChildren<Text>();
         foreach (Text t in children)
         {
-
-          var remH = remaining.Hours.ToString("D2");
-          var remM = remaining.Minutes.ToString("D2");
-          var remS = remaining.Seconds.ToString("D2");
-
-          // t.text = $"Time Remaining - {remH}:{remM}:{remS}";
-
           var formatted = remaining.ToString(@"hh\:mm\:ss");
           t.text = $"Time Remaining - {formatted}";
+
+          ApplyTimerColor(t, remaining);
+
         }
         timer = timer - delay;
       }
     }
 
+    void ApplyTimerColor(Text t, TimeSpan remaining)
+    {
+      if (!t.name.Equals("Timer"))
+      {
+        return;
+      }
+      _logger.LogInfo($"{remaining.Hours} left");
+
+      // if (remaining.Hours < 1)
+      // {
+      //   t.color = new Color(255, 135, 0);
+      //   return;
+      // }
+      if (remaining.Hours < 2)
+      {
+        t.color = Color.yellow;
+        return;
+      }
+
+
+    }
+
 
     private void MyHud(On.RoR2.UI.HUD.orig_Awake orig, RoR2.UI.HUD self)
     {
+      int fontSize = 36;
+      Font arial = (Font)Resources.GetBuiltinResource(typeof(Font), "Arial.ttf");
       orig(self);
 
+      // This is all just math to orient the timer text and its drop shadow
+      var maxX = .31f;
+      var maxY = .07f;
+      var sDeltaX = .002f;
+      var sDeltaY = .004f;
+      var rectMin = Vector2.zero;
+      var textMax = new Vector2(maxX, maxY);
+      var shadowMax = new Vector2(maxX + sDeltaX, maxY - sDeltaY);
 
-
-      GameObject gameObject = new GameObject("MyHUD");
-      gameObject.transform.SetParent(self.mainContainer.transform);
+      // Draw drop shadow
+      GameObject shadowObject = new GameObject("TimerShadow");
+      shadowObject.transform.SetParent(self.mainContainer.transform);
 
       // (0,0) = bottom left
       // (1,1) = top right
-      RectTransform rectTransform = gameObject.AddComponent<RectTransform>();
-      rectTransform.anchorMin = new Vector2(0f, .25f);
-      rectTransform.anchorMax = new Vector2(.5f, .75f);
+      RectTransform shadowRectTranform = shadowObject.AddComponent<RectTransform>();
+      shadowRectTranform.anchorMin = rectMin;
+      shadowRectTranform.anchorMax = shadowMax;
 
       // difference in size of object relative to the anchors
-      rectTransform.sizeDelta = Vector2.zero;
+      shadowRectTranform.sizeDelta = Vector2.zero;
 
       // Move the object to transalte by a certain amount relative to its anchor
-      rectTransform.anchoredPosition = Vector2.zero;
+      shadowRectTranform.anchoredPosition = Vector2.zero;
+
+      var shadowText = shadowObject.AddComponent<Text>();
+      shadowText.font = arial;
+      shadowText.text = "ඞ";
+      shadowText.fontSize = fontSize;
+      shadowText.color = Color.black;
+      shadowText.alignment = TextAnchor.MiddleCenter;
 
 
-      Font arial = (Font)Resources.GetBuiltinResource(typeof(Font), "Arial.ttf");
-      var text = gameObject.AddComponent<Text>();
-      text.font = arial;
-      text.text = "HELLO WORLD";
-      text.fontSize = 48;
-      text.alignment = TextAnchor.MiddleCenter;
+      // Draw the main timer
+      GameObject timerObject = new GameObject("Timer");
+      timerObject.transform.SetParent(self.mainContainer.transform);
+
+      // (0,0) = bottom left
+      // (1,1) = top right
+      RectTransform timerRectTransform = timerObject.AddComponent<RectTransform>();
+      timerRectTransform.anchorMin = rectMin;
+      timerRectTransform.anchorMax = textMax;
+
+      // difference in size of object relative to the anchors
+      timerRectTransform.sizeDelta = Vector2.zero;
+
+      // Move the object to transalte by a certain amount relative to its anchor
+      timerRectTransform.anchoredPosition = Vector2.zero;
+
+      var timerText = timerObject.AddComponent<Text>();
+      timerText.font = arial;
+      timerText.text = "ඞ";
+      timerText.fontSize = fontSize;
+      timerText.alignment = TextAnchor.MiddleCenter;
+
 
       // RectTransform ttr;
       // ttr = text.GetComponent<RectTransform>();
@@ -158,4 +220,7 @@ namespace com.thejpaproject.ror2hud
 
 
   }
+
+
+
 }
