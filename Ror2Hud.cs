@@ -25,6 +25,8 @@ namespace com.thejpaproject.ror2hud
     private float timer = 0f;
     private float delay = 1f;
 
+    private long fakeEndTime = (long)(DateTime.Now.AddHours(1) - new DateTime(1970, 1, 1)).TotalSeconds;
+
     public void Awake()
     {
       _logger = BepInEx.Logging.Logger.CreateLogSource("Ror2Hud");
@@ -36,22 +38,24 @@ namespace com.thejpaproject.ror2hud
 
       _logger.LogInfo("Loaded");
 
-      RaceApiTimeData myTest = new RaceApiTimeData();
-      myTest.statusCode = "444";
-      myTest.body = new Body();
-      myTest.body.item = new Item();
-      myTest.body.item.endTime = 1666929600000;
-      myTest.body.item.startTime = 1666911600000;
-      myTest.body.item.ID = "Times";
-      myTest.body.item.timeInc = 18000000;
+      // RaceApiTimeData myTest = new RaceApiTimeData();
+      // myTest.statusCode = "444";
 
-      _logger.LogInfo(myTest + " :  " + JsonUtility.ToJson(myTest.body.item, true));
-
-      _logger.LogInfo("body ?" + myTest.body);
-      _logger.LogInfo("body.item ?" + myTest.body.item);
-      _logger.LogInfo(myTest + " :  " + JsonUtility.ToJson(myTest.body, true));
+      var item = new Item();
+      item.endTime = 1666929600000;
+      item.startTime = 1666911600000;
+      item.ID = "Times";
+      item.timeInc = 18000000;
 
 
+      _logger.LogInfo("Item :  " + JsonUtility.ToJson(item, true));
+
+      var body = new Body(item);
+
+      _logger.LogInfo("body ?" + JsonUtility.ToJson(body, true));
+
+      _logger.LogInfo(fakeEndTime);
+      _logger.LogInfo(new DateTime().AddSeconds(fakeEndTime));
 
     }
 
@@ -75,14 +79,34 @@ namespace com.thejpaproject.ror2hud
 
       if (timer > delay)
       {
+
+        // var endTime = RacesApi.TimeData.body.item.endTime;
+        var endDateTime = new DateTime(1970, 1, 1).AddSeconds(fakeEndTime);
+
+        _logger.LogInfo(DateTime.Now);
+        _logger.LogInfo(endDateTime);
+
+        var remaining = endDateTime.Subtract(DateTime.Now);
+
+        _logger.LogInfo("hours - " + remaining.Hours);
+        _logger.LogInfo("mins - " + remaining.Minutes);
+        _logger.LogInfo("secs - " + remaining.Seconds);
+        _logger.LogInfo("g - " + remaining.ToString("g"));
+
+
+
         var children = self.GetComponentsInChildren<Text>();
         foreach (Text t in children)
         {
-          _logger.LogInfo(DateTime.Now);
-          _logger.LogInfo("Time Data ? " + RacesApi.TimeData.body);
-          _logger.LogInfo("Time Data ? " + RacesApi.TimeData.body?.item?.endTime);
 
-          t.text = DateTime.Now.ToString();
+          var remH = remaining.Hours.ToString("D2");
+          var remM = remaining.Minutes.ToString("D2");
+          var remS = remaining.Seconds.ToString("D2");
+
+          // t.text = $"Time Remaining - {remH}:{remM}:{remS}";
+
+          var formatted = remaining.ToString(@"hh\:mm\:ss");
+          t.text = $"Time Remaining - {formatted}";
         }
         timer = timer - delay;
       }
@@ -92,6 +116,8 @@ namespace com.thejpaproject.ror2hud
     private void MyHud(On.RoR2.UI.HUD.orig_Awake orig, RoR2.UI.HUD self)
     {
       orig(self);
+
+
 
       GameObject gameObject = new GameObject("MyHUD");
       gameObject.transform.SetParent(self.mainContainer.transform);
