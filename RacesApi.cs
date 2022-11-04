@@ -51,14 +51,12 @@ namespace com.thejpaproject.ror2hud
         _logger.LogInfo(DateTimeOffset.Now.ToString() + " " + JsonUtility.ToJson(TimeData));
 
 
-
-
       }
     }
 
   }
 
-  [Serializable]
+  [System.Serializable]
   public class RaceApiTimeData
   {
     public string statusCode;
@@ -66,15 +64,22 @@ namespace com.thejpaproject.ror2hud
   }
 
 
-  [Serializable]
+
   public class Body
   {
+
+    public Body(Item item)
+    {
+      this.item = item;
+    }
+
     [field: SerializeField] public Item item;
+
 
   }
 
 
-  [Serializable]
+  [System.Serializable]
   public class Item
   {
     public long startTime;
