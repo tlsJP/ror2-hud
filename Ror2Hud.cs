@@ -1,7 +1,4 @@
 
-
-
-
 using BepInEx;
 using BepInEx.Logging;
 using System;
@@ -72,7 +69,7 @@ namespace com.thejpaproject.ror2hud
           if (RaceTimeApi.IsRaceFuture())
           {
             // var endTime = RacesApi.TimeData.body.item.endTime;
-            t.text = "Race Start : {endDateTime}";
+            t.text = $"Race Start : {RaceTimeApi.GetStartTime()}";
           }
           else if (RaceTimeApi.IsRaceNow())
           {

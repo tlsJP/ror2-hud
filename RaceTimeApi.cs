@@ -48,36 +48,42 @@ namespace com.thejpaproject.ror2hud
 
         // DEBUG TESTING
 
+        // FUTURE RACE
+        // _startTime = DateTime.Now.AddHours(1);
+        // _endTime = DateTime.Now.AddHours(2);
+
+        // RACE HAPPENING
+        // _startTime = DateTime.Now;
+        // _endTime = DateTime.Now.AddHours(1).AddMinutes(1);
+
+        // RACE ENDING
+        // _startTime = DateTime.Now;
+        // _endTime = DateTime.Now.AddMinutes(1);
+
       }
     }
 
-    public static bool IsRaceNow()
+    public static DateTime GetStartTime()
     {
-      var startMs = _timeData.body.item.startTime;
-      var endMs = _timeData.body.item.endTime;
-      var now = (DateTime.Now - _epoch).TotalMilliseconds;
-      return startMs < now && now < endMs;
+      return _startTime;
     }
 
     public static bool IsRaceFuture()
     {
-      var startMs = _timeData.body.item.startTime;
-      var endMs = _timeData.body.item.endTime;
-      var now = (DateTime.Now - _epoch).TotalMilliseconds;
-      return now < startMs && now < endMs;
+      var now = DateTime.Now;
+      return now < _startTime && now < _endTime;
+    }
+
+    public static bool IsRaceNow()
+    {
+      var now = DateTime.Now;
+      return _startTime < now && now < _endTime;
     }
 
     public static bool IsRacePast()
     {
-      var startMs = _timeData.body.item.startTime;
-      var endMs = _timeData.body.item.endTime;
-      var now = (DateTime.Now - _epoch).TotalMilliseconds;
-      return now > startMs && now > endMs;
-    }
-
-    public static DateTime GetEndTime()
-    {
-      return _endTime;
+      var now = DateTime.Now;
+      return now > _startTime && now > _endTime;
     }
 
     public static TimeSpan GetRemaining()
