@@ -40,23 +40,6 @@ namespace com.thejpaproject.ror2hud
 
       _logger.LogInfo("Loaded");
 
-      // RaceApiTimeData myTest = new RaceApiTimeData();
-      // myTest.statusCode = "444";
-
-      var item = new Item();
-      item.endTime = 1666929600000;
-      item.startTime = 1666911600000;
-      item.ID = "Times";
-      item.timeInc = 18000000;
-
-
-      _logger.LogInfo("Item :  " + JsonUtility.ToJson(item, true));
-
-      var body = new Body(item);
-
-      _logger.LogInfo("body ?" + JsonUtility.ToJson(body, true));
-
-
     }
 
 
@@ -65,34 +48,11 @@ namespace com.thejpaproject.ror2hud
       orig(self, mainMenuController);
       if (!timeDataLoaded)
       {
-        RacesApi.LoadTimeData(self);
+        RaceTimeApi.LoadTimeData(self);
         timeDataLoaded = true;
       }
     }
 
-    bool IsRaceNow()
-    {
-      var startMs = RacesApi.TimeData.body.item.startTime;
-      var endMs = RacesApi.TimeData.body.item.endTime;
-      var now = (DateTime.Now - epoch).TotalMilliseconds;
-      return startMs < now && now < endMs;
-    }
-
-    bool IsRaceFuture()
-    {
-      var startMs = RacesApi.TimeData.body.item.startTime;
-      var endMs = RacesApi.TimeData.body.item.endTime;
-      var now = (DateTime.Now - epoch).TotalMilliseconds;
-      return now < startMs && now < endMs;
-    }
-
-    bool IsRacePast()
-    {
-      var startMs = RacesApi.TimeData.body.item.startTime;
-      var endMs = RacesApi.TimeData.body.item.endTime;
-      var now = (DateTime.Now - epoch).TotalMilliseconds;
-      return now > startMs && now > endMs;
-    }
 
 
     private void Update(On.RoR2.UI.HUD.orig_Update orig, RoR2.UI.HUD self)
@@ -103,14 +63,26 @@ namespace com.thejpaproject.ror2hud
 
       if (timer > delay)
       {
-        var endDateTime = epoch.AddSeconds(fakeEndTime);
-        var remaining = endDateTime.Subtract(DateTime.Now);
+
+        var remaining = RaceTimeApi.GetRemaining();
 
         var children = self.GetComponentsInChildren<Text>();
         foreach (Text t in children)
         {
-          var formatted = remaining.ToString(@"hh\:mm\:ss");
-          t.text = $"Time Remaining - {formatted}";
+          if (RaceTimeApi.IsRaceFuture())
+          {
+            // var endTime = RacesApi.TimeData.body.item.endTime;
+            t.text = "Race Start : {endDateTime}";
+          }
+          else if (RaceTimeApi.IsRaceNow())
+          {
+            var formatted = remaining.ToString(@"hh\:mm\:ss");
+            t.text = $"Time Remaining - {formatted}";
+          }
+          else
+          {
+            t.text = "Race has ended";
+          }
 
           ApplyTimerColor(t, remaining);
 
@@ -121,18 +93,19 @@ namespace com.thejpaproject.ror2hud
 
     void ApplyTimerColor(Text t, TimeSpan remaining)
     {
+      // We only want to apply custom color to the actual timer, not its drop shadow
       if (!t.name.Equals("Timer"))
       {
         return;
       }
-      _logger.LogInfo($"{remaining.Hours} left");
 
-      // if (remaining.Hours < 1)
-      // {
-      //   t.color = new Color(255, 135, 0);
-      //   return;
-      // }
-      if (remaining.Hours < 2)
+      if (RaceTimeApi.IsRacePast())
+      {
+        t.color = Color.grey;
+        return;
+      }
+
+      if (remaining.Hours < 1)
       {
         t.color = Color.yellow;
         return;
